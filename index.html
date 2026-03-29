@@ -29,87 +29,93 @@ input{font-family:inherit;-webkit-appearance:none;}
 (function(){
 "use strict";
 
-// === DATA ===
-var MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-var MSHORT = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-var WDAYS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
-var ORDS = ["1st","2nd","3rd","4th","5th"];
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+var MSHORT=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var WDAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
-var TYPES = {PREP:"prep",NEEDLE:"needle",RECOVERY:"recovery",TRET:"tret",AZELAIC:"azelaic"};
-var META = {};
-META[TYPES.NEEDLE] = {label:"Microneedling",color:"#ff4757",icon:"\uD83D\uDC89",short:"Needle"};
-META[TYPES.PREP] = {label:"Prep Day",color:"#ffa502",icon:"\u23F8",short:"Prep"};
-META[TYPES.RECOVERY] = {label:"Recovery",color:"#ff6348",icon:"\uD83D\uDEE1",short:"Recover"};
-META[TYPES.TRET] = {label:"Tretinoin Night",color:"#1e90ff",icon:"\uD83D\uDCA7",short:"Tret"};
-META[TYPES.AZELAIC] = {label:"Azelaic Night",color:"#a55eea",icon:"\u2728",short:"Azelaic"};
+var TYPES={PREP:"prep",NEEDLE:"needle",RECOVERY:"recovery",TRET:"tret",AZELAIC:"azelaic"};
+var META={};
+META[TYPES.NEEDLE]={label:"Microneedling",color:"#ff4757",icon:"\uD83D\uDC89",short:"Needle"};
+META[TYPES.PREP]={label:"Prep Day",color:"#ffa502",icon:"\u23F8",short:"Prep"};
+META[TYPES.RECOVERY]={label:"Recovery",color:"#ff6348",icon:"\uD83D\uDEE1",short:"Recover"};
+META[TYPES.TRET]={label:"Tretinoin Night",color:"#1e90ff",icon:"\uD83D\uDCA7",short:"Tret"};
+META[TYPES.AZELAIC]={label:"Azelaic Night",color:"#a55eea",icon:"\u2728",short:"Azelaic"};
 
-var DEF_ROUTINES = {};
-DEF_ROUTINES[TYPES.TRET] = {
+var DEF_ROUTINES={};
+DEF_ROUTINES[TYPES.TRET]={
   am:["Cleanser","Naruko Tea Tree Toner","Neogence HA Essence","Celimax Pore + Dark Spot","AHC Pro Shot Bright","CeraVe Moisturizing Cream","Heliocare Sunscreen"],
   pm:["Cleanser","Naruko Tea Tree Toner","Neogence HA Essence","Tretinoin 0.05%","CeraVe Moisturizing Cream"],
   note:"Tretinoin night \u2014 avoid sun exposure tomorrow"
 };
-DEF_ROUTINES[TYPES.AZELAIC] = {
+DEF_ROUTINES[TYPES.AZELAIC]={
   am:["Cleanser","Naruko Tea Tree Toner","Neogence HA Essence","Celimax Pore + Dark Spot","AHC Pro Shot Bright","CeraVe Moisturizing Cream","Heliocare Sunscreen"],
   pm:["Cleanser","Naruko Tea Tree Toner","Ba Luan Azelaic Acid 15%","Copper Peptide + PDRN Serum","CeraVe Moisturizing Cream"],
   note:"Azelaic acid + copper peptide night"
 };
-DEF_ROUTINES[TYPES.PREP] = {
+DEF_ROUTINES[TYPES.PREP]={
   am:["Cleanser","Naruko Tea Tree Toner","Neogence HA Essence","CeraVe Moisturizing Cream","Heliocare Sunscreen"],
   pm:["Cleanser","Neogence HA Essence","CeraVe Moisturizing Cream"],
   note:"No actives \u2014 prepping skin for microneedling"
 };
-DEF_ROUTINES[TYPES.NEEDLE] = {
+DEF_ROUTINES[TYPES.NEEDLE]={
   am:["Cleanser","Neogence HA Essence","CeraVe Moisturizing Cream","Heliocare Sunscreen (if going out)"],
   pm:["Cleanser","Neogence HA Essence","Copper Peptide + PDRN Serum","CeraVe Moisturizing Cream"],
-  note:"Microneedling night \u2014 apply HA during session, copper peptide after"
+  note:"Microneedling night (0.25\u20130.5mm) \u2014 apply HA during session, copper peptide after"
 };
-DEF_ROUTINES[TYPES.RECOVERY] = {
+DEF_ROUTINES[TYPES.RECOVERY]={
   am:["Cleanser","Neogence HA Essence","CeraVe Moisturizing Cream","Heliocare Sunscreen"],
   pm:["Cleanser","Neogence HA Essence","Copper Peptide + PDRN Serum","CeraVe Moisturizing Cream"],
   note:"Recovery \u2014 hydration and healing only"
 };
 
-// === STATE ===
-var S = {
-  screen:"calendar", year:new Date().getFullYear(), month:new Date().getMonth(),
-  satIndex:0, selDay:null, completed:{}, routines:null, streak:{},
+// STATE
+var S={
+  screen:"calendar",year:new Date().getFullYear(),month:new Date().getMonth(),
+  selDay:null,completed:{},routines:null,streak:{},
   reminders:{amOn:false,amTime:"07:00",pmOn:false,pmTime:"21:00"},
-  editType:null, editPeriod:"am", editItems:[], newItem:""
+  editType:null,editPeriod:"am",editItems:[],newItem:""
 };
 
-// === STORAGE ===
-function ld(k,fb){try{var v=localStorage.getItem("sk2_"+k);return v?JSON.parse(v):fb;}catch(e){return fb;}}
-function sv(k,v){try{localStorage.setItem("sk2_"+k,JSON.stringify(v));}catch(e){}}
+// STORAGE
+function ld(k,fb){try{var v=localStorage.getItem("sk3_"+k);return v?JSON.parse(v):fb;}catch(e){return fb;}}
+function sv(k,v){try{localStorage.setItem("sk3_"+k,JSON.stringify(v));}catch(e){}}
 
 function initState(){
-  S.completed = ld("completed",{});
-  S.routines = ld("routines", JSON.parse(JSON.stringify(DEF_ROUTINES)));
-  S.streak = ld("streak",{});
-  S.reminders = ld("reminders",{amOn:false,amTime:"07:00",pmOn:false,pmTime:"21:00"});
-  S.satIndex = ld("satIndex",0);
+  S.completed=ld("completed",{});
+  S.routines=ld("routines",JSON.parse(JSON.stringify(DEF_ROUTINES)));
+  S.streak=ld("streak",{});
+  S.reminders=ld("reminders",{amOn:false,amTime:"07:00",pmOn:false,pmTime:"21:00"});
 }
 
-// === HELPERS ===
-function getSats(y,m){var s=[];var d=new Date(y,m+1,0).getDate();for(var i=1;i<=d;i++)if(new Date(y,m,i).getDay()===6)s.push(i);return s;}
-
-function buildSch(y,m,si){
-  var dim=new Date(y,m+1,0).getDate(),sch={},sats=getSats(y,m);
-  var idx=Math.min(si,sats.length-1),nd=sats[idx];
-  sch[nd]=TYPES.NEEDLE;
-  for(var o=1;o<=3;o++){if(nd-o>=1)sch[nd-o]=TYPES.PREP;}
-  for(var o=1;o<=3;o++){if(nd+o<=dim)sch[nd+o]=TYPES.RECOVERY;}
-  var t=true;for(var i=1;i<=dim;i++){if(!sch[i]){sch[i]=t?TYPES.TRET:TYPES.AZELAIC;t=!t;}}
+// SCHEDULE: Every Friday = needle, Thursday = prep, Saturday = recovery, rest alternate tret/azelaic
+function buildSch(y,m){
+  var dim=new Date(y,m+1,0).getDate();
+  var sch={};
+  // Mark all Fridays as needle, Thursdays as prep, Saturdays as recovery
+  for(var d=1;d<=dim;d++){
+    var dow=new Date(y,m,d).getDay(); // 0=Sun,1=Mon,...5=Fri,6=Sat
+    if(dow===5) sch[d]=TYPES.NEEDLE;      // Friday
+    else if(dow===4) sch[d]=TYPES.PREP;    // Thursday
+    else if(dow===6) sch[d]=TYPES.RECOVERY;// Saturday
+  }
+  // Fill remaining (Sun, Mon, Tue, Wed) with alternating tret/azelaic
+  var t=true;
+  for(var d=1;d<=dim;d++){
+    if(!sch[d]){
+      sch[d]=t?TYPES.TRET:TYPES.AZELAIC;
+      t=!t;
+    }
+  }
   return sch;
 }
 
-function dk(y,m,d){return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");}
-function todayDk(){var t=new Date();return dk(t.getFullYear(),t.getMonth(),t.getDate());}
+function dkey(y,m,d){return y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");}
+function todayDk(){var t=new Date();return dkey(t.getFullYear(),t.getMonth(),t.getDate());}
 function isTd(d){var t=new Date();return d===t.getDate()&&S.month===t.getMonth()&&S.year===t.getFullYear();}
 
 function getStreak(){
   var c=0,d=new Date();d.setDate(d.getDate()-1);
-  while(S.streak[dk(d.getFullYear(),d.getMonth(),d.getDate())]){c++;d.setDate(d.getDate()-1);}
+  while(S.streak[dkey(d.getFullYear(),d.getMonth(),d.getDate())]){c++;d.setDate(d.getDate()-1);}
   if(S.streak[todayDk()])c++;
   return c;
 }
@@ -120,15 +126,14 @@ function toast(msg){
   clearTimeout(toastTm);toastTm=setTimeout(function(){el.classList.remove("show");},2200);
 }
 
-// === DOM HELPERS ===
+// DOM HELPERS
 function el(tag,attrs,children){
   var e=document.createElement(tag);
   if(attrs){
     for(var k in attrs){
       if(k==="style"&&typeof attrs[k]==="object"){Object.assign(e.style,attrs[k]);}
-      else if(k==="onclick"||k==="onchange"||k==="oninput"||k==="onkeydown"){e[k]=attrs[k];}
+      else if(k.substring(0,2)==="on"){e[k]=attrs[k];}
       else if(k==="className"){e.className=attrs[k];}
-      else if(k==="htmlFor"){e.htmlFor=attrs[k];}
       else{e.setAttribute(k,attrs[k]);}
     }
   }
@@ -143,17 +148,17 @@ function el(tag,attrs,children){
   return e;
 }
 
-function txt(s){return document.createTextNode(s);}
-
 function btn(label,onclick,style){
-  return el("button",{onclick:onclick,style:style},[label]);
+  var b=el("button",{onclick:onclick,style:style});
+  if(typeof label==="string")b.appendChild(document.createTextNode(label));
+  else if(label)b.appendChild(label);
+  return b;
 }
 
-// === RENDER ===
+// RENDER
 function render(){
   var app=document.getElementById("app");
   app.innerHTML="";
-
   if(S.editType){renderEdit(app);return;}
   if(S.screen==="detail"&&S.selDay){renderDetail(app);return;}
   if(S.screen==="settings"){renderSettings(app);return;}
@@ -161,14 +166,14 @@ function render(){
   renderCalendar(app);
 }
 
-// --- CALENDAR ---
+// CALENDAR
 function renderCalendar(app){
-  var sch=buildSch(S.year,S.month,S.satIndex);
+  var sch=buildSch(S.year,S.month);
   var fd=(new Date(S.year,S.month,1).getDay()+6)%7;
   var dim=new Date(S.year,S.month+1,0).getDate();
   var streak=getStreak();
   var now=new Date();
-  var todaySch=buildSch(now.getFullYear(),now.getMonth(),S.satIndex);
+  var todaySch=buildSch(now.getFullYear(),now.getMonth());
   var todayType=todaySch[now.getDate()];
   var todayM=META[todayType];
 
@@ -176,7 +181,7 @@ function renderCalendar(app){
   var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:"16px"}});
   var hdrL=el("div");
   hdrL.appendChild(el("h1",{style:{fontSize:"24px",fontWeight:"800",color:"#f8fafc",letterSpacing:"-0.5px"}},["Skincare"]));
-  hdrL.appendChild(el("p",{style:{fontSize:"11px",color:"#475569",marginTop:"2px",textTransform:"uppercase",letterSpacing:"1.5px"}},["Saturday Needling Schedule"]));
+  hdrL.appendChild(el("p",{style:{fontSize:"11px",color:"#475569",marginTop:"2px",textTransform:"uppercase",letterSpacing:"1.5px"}},["Weekly Friday Needling"]));
   hdr.appendChild(hdrL);
 
   var hdrR=el("div",{style:{display:"flex",gap:"8px"}});
@@ -211,6 +216,11 @@ function renderCalendar(app){
   tc.appendChild(el("span",{style:{color:"#475569",fontSize:"18px"}},["→"]));
   app.appendChild(tc);
 
+  // Week pattern info
+  var info=el("div",{style:{background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.05)",borderRadius:"10px",padding:"10px 14px",marginBottom:"16px",fontSize:"11px",color:"#64748b",lineHeight:"1.6"}});
+  info.appendChild(document.createTextNode("Thu \u2192 Prep (no actives) \u2022 Fri \u2192 Needle (0.25\u20130.5mm) \u2022 Sat \u2192 Recovery \u2022 Sun\u2013Wed \u2192 Tret / Azelaic"));
+  app.appendChild(info);
+
   // Month nav
   var nav=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"14px",padding:"0 2px"}});
   nav.appendChild(btn("\u2039",function(){prevMonth();},{
@@ -229,17 +239,18 @@ function renderCalendar(app){
   // Day headers
   var dhdr=el("div",{style:{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"3px",marginBottom:"4px"}});
   WDAYS.forEach(function(d){
-    dhdr.appendChild(el("div",{style:{textAlign:"center",fontSize:"10px",color:d==="Sat"?"#ff4757":"#475569",
+    dhdr.appendChild(el("div",{style:{textAlign:"center",fontSize:"10px",
+      color:d==="Fri"?"#ff4757":d==="Thu"?"#ffa502":d==="Sat"?"#ff6348":"#475569",
       fontWeight:"700",textTransform:"uppercase",letterSpacing:"1px",padding:"4px 0"}},[d]));
   });
   app.appendChild(dhdr);
 
-  // Calendar grid
+  // Grid
   var grid=el("div",{style:{display:"grid",gridTemplateColumns:"repeat(7,1fr)",gap:"3px"}});
   for(var i=0;i<fd;i++)grid.appendChild(el("div"));
   for(var d=1;d<=dim;d++){
     (function(day){
-      var type=sch[day];var m=META[type];var key=dk(S.year,S.month,day);
+      var type=sch[day];var m=META[type];var key=dkey(S.year,S.month,day);
       var done=S.streak[key];var td=isTd(day);
       var cell=el("button",{onclick:function(){S.selDay=day;S.screen="detail";render();},style:{
         borderRadius:"9px",padding:"5px 2px",display:"flex",flexDirection:"column",alignItems:"center",
@@ -267,7 +278,6 @@ function renderCalendar(app){
   });
   app.appendChild(leg);
 
-  // Streak bar
   if(streak>0){
     app.appendChild(btn("\uD83D\uDD25 "+streak+" day streak \u2014 keep it going!",function(){S.screen="streak";render();},{
       width:"100%",marginTop:"16px",padding:"12px",borderRadius:"10px",
@@ -277,13 +287,12 @@ function renderCalendar(app){
   }
 }
 
-// --- DETAIL ---
+// DETAIL
 function renderDetail(app){
-  var sch=buildSch(S.year,S.month,S.satIndex);
+  var sch=buildSch(S.year,S.month);
   var type=sch[S.selDay];var meta=META[type];var routine=S.routines[type];
-  var key=dk(S.year,S.month,S.selDay);
+  var key=dkey(S.year,S.month,S.selDay);
 
-  // Header
   var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"16px"}});
   hdr.appendChild(btn("\u2190 Calendar",function(){S.screen="calendar";render();},{
     background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.08)",
@@ -295,7 +304,6 @@ function renderDetail(app){
   }));
   app.appendChild(hdr);
 
-  // Banner
   var allAmDone=routine.am.every(function(_,i){return S.completed[key+"-am-"+i];});
   var allPmDone=routine.pm.every(function(_,i){return S.completed[key+"-pm-"+i];});
   var dayDone=allAmDone&&allPmDone;
@@ -312,12 +320,9 @@ function renderDetail(app){
   if(routine.note)banner.appendChild(el("div",{style:{fontSize:"12px",color:"#94a3b8",marginTop:"10px",lineHeight:"1.5",fontStyle:"italic"}},[routine.note]));
   app.appendChild(banner);
 
-  // AM section
   app.appendChild(buildSection("am","\u2600\uFE0F MORNING","#f59e0b",routine.am,key,allAmDone));
-  // PM section
   app.appendChild(buildSection("pm","\uD83C\uDF19 EVENING","#818cf8",routine.pm,key,allPmDone));
 
-  // Reset
   app.appendChild(btn("Reset Day",function(){resetDay(key,type);},{
     width:"100%",padding:"12px",borderRadius:"10px",background:"rgba(255,255,255,0.04)",
     border:"1px solid rgba(255,255,255,0.08)",color:"#64748b",fontSize:"13px",marginTop:"8px",textAlign:"center"
@@ -337,7 +342,6 @@ function buildSection(period,title,color,items,dayKey,allDone){
     }));
   }
   sec.appendChild(hdr);
-
   items.forEach(function(step,i){
     var done=S.completed[dayKey+"-"+period+"-"+i];
     var row=el("button",{onclick:function(){toggleStep(dayKey,period,i);},style:{
@@ -359,10 +363,9 @@ function buildSection(period,title,color,items,dayKey,allDone){
   return sec;
 }
 
-// --- EDIT ---
+// EDIT
 function renderEdit(app){
   var meta=META[S.editType];
-
   var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px"}});
   hdr.appendChild(btn("\u2190 Back",function(){S.editType=null;render();},{
     background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.08)",
@@ -371,7 +374,6 @@ function renderEdit(app){
   hdr.appendChild(el("span",{style:{fontSize:"14px",fontWeight:"700",color:meta.color}},[meta.icon+" Edit "+meta.label]));
   app.appendChild(hdr);
 
-  // Period tabs
   var tabs=el("div",{style:{display:"flex",gap:"6px",marginBottom:"16px"}});
   ["am","pm"].forEach(function(p){
     var active=S.editPeriod===p;
@@ -386,7 +388,6 @@ function renderEdit(app){
   });
   app.appendChild(tabs);
 
-  // Items
   var list=el("div");
   S.editItems.forEach(function(item,i){
     var row=el("div",{style:{display:"flex",alignItems:"center",gap:"8px",background:"rgba(255,255,255,0.04)",
@@ -395,9 +396,7 @@ function renderEdit(app){
     var inp=el("input",{type:"text",value:item,style:{
       flex:"1",background:"transparent",border:"none",color:"#e2e8f0",fontSize:"13px",outline:"none"
     }});
-    (function(idx){
-      inp.addEventListener("change",function(){S.editItems[idx]=this.value;});
-    })(i);
+    (function(idx){inp.addEventListener("change",function(){S.editItems[idx]=this.value;});})(i);
     row.appendChild(inp);
     (function(idx){
       row.appendChild(btn("\u2715",function(){S.editItems.splice(idx,1);render();},{
@@ -410,7 +409,6 @@ function renderEdit(app){
   });
   app.appendChild(list);
 
-  // Add row
   var addRow=el("div",{style:{display:"flex",gap:"8px",marginTop:"12px"}});
   var addInp=el("input",{type:"text",placeholder:"Add new product...",style:{
     flex:"1",background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",
@@ -423,23 +421,18 @@ function renderEdit(app){
   addRow.appendChild(addInp);
   addRow.appendChild(btn("+",function(){
     if(S.newItem.trim()){S.editItems.push(S.newItem.trim());S.newItem="";render();}
-  },{
-    width:"42px",borderRadius:"10px",background:meta.color,color:"#fff",fontSize:"20px",
-    display:"flex",alignItems:"center",justifyContent:"center"
-  }));
+  },{width:"42px",borderRadius:"10px",background:meta.color,color:"#fff",fontSize:"20px",
+    display:"flex",alignItems:"center",justifyContent:"center"}));
   app.appendChild(addRow);
 
-  // Save
   app.appendChild(btn("Save Changes",function(){saveRoutineEdit();},{
     width:"100%",padding:"14px",borderRadius:"12px",background:meta.color,
     color:"#fff",fontSize:"15px",fontWeight:"700",marginTop:"20px"
   }));
 }
 
-// --- SETTINGS ---
+// SETTINGS
 function renderSettings(app){
-  var sats=getSats(S.year,S.month);
-
   var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px"}});
   hdr.appendChild(btn("\u2190 Back",function(){S.screen="calendar";render();},{
     background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.08)",
@@ -448,24 +441,9 @@ function renderSettings(app){
   hdr.appendChild(el("span",{style:{fontSize:"15px",fontWeight:"700",color:"#f8fafc"}},["⚙️ Settings"]));
   app.appendChild(hdr);
 
-  // Sat picker
-  var card1=el("div",{style:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"14px",padding:"16px",marginBottom:"12px"}});
-  card1.appendChild(el("div",{style:{fontSize:"14px",fontWeight:"700",color:"#f8fafc"}},["Microneedling Saturday"]));
-  var satRow=el("div",{style:{display:"flex",gap:"6px",flexWrap:"wrap",marginTop:"8px"}});
-  sats.forEach(function(sat,i){
-    var active=S.satIndex===i;
-    satRow.appendChild(btn(ORDS[i]+" ("+sat+")",function(){S.satIndex=i;S.selDay=null;sv("satIndex",i);render();},{
-      borderRadius:"8px",border:"1.5px solid "+(active?"#ff4757":"rgba(255,71,87,0.3)"),
-      background:active?"#ff4757":"rgba(255,71,87,0.1)",color:active?"#fff":"#ff4757",
-      padding:"6px 12px",fontSize:"12px",fontWeight:"600"
-    }));
-  });
-  card1.appendChild(satRow);
-  app.appendChild(card1);
-
   // Reminders
-  var card2=el("div",{style:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"14px",padding:"16px",marginBottom:"12px"}});
-  card2.appendChild(el("div",{style:{fontSize:"14px",fontWeight:"700",color:"#f8fafc"}},["Reminders"]));
+  var card1=el("div",{style:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"14px",padding:"16px",marginBottom:"12px"}});
+  card1.appendChild(el("div",{style:{fontSize:"14px",fontWeight:"700",color:"#f8fafc"}},["Reminders"]));
 
   [["am","\u2600\uFE0F Morning","amOn","amTime"],["pm","\uD83C\uDF19 Evening","pmOn","pmTime"]].forEach(function(cfg){
     var row=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}});
@@ -473,11 +451,9 @@ function renderSettings(app){
     var rr=el("div",{style:{display:"flex",alignItems:"center",gap:"8px"}});
     var tinp=el("input",{type:"time",value:S.reminders[cfg[3]],style:{
       background:"rgba(255,255,255,0.06)",border:"1px solid rgba(255,255,255,0.1)",
-      borderRadius:"6px",color:"#e2e8f0",padding:"4px 8px",fontSize:"13px"
+      borderRadius:"6px",color:"#e2e8f0",padding:"4px 8px",fontSize:"13px",colorScheme:"dark"
     }});
-    (function(timeKey){
-      tinp.addEventListener("change",function(){S.reminders[timeKey]=this.value;sv("reminders",S.reminders);toast("Reminder saved \u23F0");});
-    })(cfg[3]);
+    (function(timeKey){tinp.addEventListener("change",function(){S.reminders[timeKey]=this.value;sv("reminders",S.reminders);toast("Reminder saved \u23F0");});})(cfg[3]);
     rr.appendChild(tinp);
     var isOn=S.reminders[cfg[2]];
     rr.appendChild(btn(isOn?"ON":"OFF",(function(toggleKey){
@@ -490,33 +466,39 @@ function renderSettings(app){
       color:isOn?"#fff":"#64748b"
     }));
     row.appendChild(rr);
-    card2.appendChild(row);
+    card1.appendChild(row);
   });
-
-  card2.appendChild(el("div",{style:{fontSize:"11px",color:"#475569",marginTop:"8px",lineHeight:"1.5"}},
+  card1.appendChild(el("div",{style:{fontSize:"11px",color:"#475569",marginTop:"8px",lineHeight:"1.5"}},
     ["Open in Safari \u2192 Share \u2192 Add to Home Screen for notifications."]));
-  app.appendChild(card2);
+  app.appendChild(card1);
 
   // Edit routines
-  var card3=el("div",{style:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"14px",padding:"16px",marginBottom:"12px"}});
-  card3.appendChild(el("div",{style:{fontSize:"14px",fontWeight:"700",color:"#f8fafc",marginBottom:"8px"}},["Edit Routines"]));
+  var card2=el("div",{style:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"14px",padding:"16px",marginBottom:"12px"}});
+  card2.appendChild(el("div",{style:{fontSize:"14px",fontWeight:"700",color:"#f8fafc",marginBottom:"8px"}},["Edit Routines"]));
   Object.keys(META).forEach(function(k){
     var m=META[k];
-    card3.appendChild(btn(null,(function(type){
+    var b=btn(null,(function(type){
       return function(){S.editType=type;S.editPeriod="am";S.editItems=S.routines[type].am.slice();S.newItem="";render();};
     })(k),{
       display:"flex",justifyContent:"space-between",alignItems:"center",
       padding:"10px 12px",borderRadius:"10px",background:"rgba(255,255,255,0.03)",
       border:"1px solid rgba(255,255,255,0.06)",color:"#cbd5e1",fontSize:"13px",
       width:"100%",marginBottom:"6px"
-    }));
-    var lastBtn=card3.lastChild;
-    lastBtn.appendChild(el("span",null,[m.icon+" "+m.label]));
-    lastBtn.appendChild(el("span",{style:{color:"#475569"}},["→"]));
+    });
+    b.appendChild(el("span",null,[m.icon+" "+m.label]));
+    b.appendChild(el("span",{style:{color:"#475569"}},["→"]));
+    card2.appendChild(b);
   });
+  app.appendChild(card2);
+
+  // Schedule info
+  var card3=el("div",{style:{background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:"14px",padding:"16px",marginBottom:"12px"}});
+  card3.appendChild(el("div",{style:{fontSize:"14px",fontWeight:"700",color:"#f8fafc",marginBottom:"8px"}},["Weekly Pattern"]));
+  card3.appendChild(el("div",{style:{fontSize:"12px",color:"#94a3b8",lineHeight:"1.8"}},
+    ["Thu \u2192 Prep (no actives)\nFri \u2192 Microneedling (0.25\u20130.5mm)\nSat \u2192 Recovery (HA + Copper Peptide)\nSun\u2013Wed \u2192 Alternate Tret / Azelaic"]));
+  card3.lastChild.style.whiteSpace="pre-line";
   app.appendChild(card3);
 
-  // Reset all
   app.appendChild(btn("Reset All Progress",function(){
     S.completed={};S.streak={};sv("completed",{});sv("streak",{});toast("All progress reset");render();
   },{
@@ -525,7 +507,7 @@ function renderSettings(app){
   }));
 }
 
-// --- STREAK ---
+// STREAK
 function renderStreak(app){
   var streak=getStreak();
   var hdr=el("div",{style:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:"20px"}});
@@ -546,7 +528,7 @@ function renderStreak(app){
   var grid=el("div",{style:{display:"grid",gridTemplateColumns:"repeat(10,1fr)",gap:"4px",marginTop:"10px"}});
   for(var i=29;i>=0;i--){
     var d=new Date();d.setDate(d.getDate()-i);
-    var k=dk(d.getFullYear(),d.getMonth(),d.getDate());
+    var k=dkey(d.getFullYear(),d.getMonth(),d.getDate());
     var done=!!S.streak[k];var isTdy=k===todayDk();
     grid.appendChild(el("div",{style:{
       width:"28px",height:"28px",borderRadius:"6px",display:"flex",alignItems:"center",justifyContent:"center",
@@ -565,26 +547,22 @@ function renderStreak(app){
   app.appendChild(card2);
 }
 
-// === ACTIONS ===
+// ACTIONS
 function toggleStep(dayKey,period,idx){
   var key=dayKey+"-"+period+"-"+idx;
   if(S.completed[key]){delete S.completed[key];}else{S.completed[key]=true;}
-  sv("completed",S.completed);
-  checkDayComplete(dayKey);
-  render();
+  sv("completed",S.completed);checkDayComplete(dayKey);render();
 }
 
 function markAllDone(dayKey,period,count){
   for(var i=0;i<count;i++)S.completed[dayKey+"-"+period+"-"+i]=true;
-  sv("completed",S.completed);
-  checkDayComplete(dayKey);
-  toast(period.toUpperCase()+" routine done! \u2713");
-  render();
+  sv("completed",S.completed);checkDayComplete(dayKey);
+  toast(period.toUpperCase()+" routine done! \u2713");render();
 }
 
 function checkDayComplete(dayKey){
   var parts=dayKey.split("-");var y=+parts[0],m=+parts[1]-1,d=+parts[2];
-  var sch=buildSch(y,m,S.satIndex);var type=sch[d];var r=S.routines[type];
+  var sch=buildSch(y,m);var type=sch[d];var r=S.routines[type];
   var allAm=r.am.every(function(_,i){return S.completed[dayKey+"-am-"+i];});
   var allPm=r.pm.every(function(_,i){return S.completed[dayKey+"-pm-"+i];});
   if(allAm&&allPm){S.streak[dayKey]=true;sv("streak",S.streak);toast("Day complete! \uD83C\uDF89");}
@@ -595,45 +573,36 @@ function resetDay(dayKey,type){
   r.am.forEach(function(_,i){delete S.completed[dayKey+"-am-"+i];});
   r.pm.forEach(function(_,i){delete S.completed[dayKey+"-pm-"+i];});
   delete S.streak[dayKey];
-  sv("completed",S.completed);sv("streak",S.streak);
-  toast("Day reset");render();
+  sv("completed",S.completed);sv("streak",S.streak);toast("Day reset");render();
 }
 
 function saveRoutineEdit(){
   S.routines[S.editType][S.editPeriod]=S.editItems.slice();
-  sv("routines",S.routines);
-  S.editType=null;
-  toast("Routine updated! \u2713");
-  render();
+  sv("routines",S.routines);S.editType=null;
+  toast("Routine updated! \u2713");render();
 }
 
 function prevMonth(){if(S.month===0){S.month=11;S.year--;}else S.month--;S.selDay=null;render();}
 function nextMonth(){if(S.month===11){S.month=0;S.year++;}else S.month++;S.selDay=null;render();}
-function goToToday(){
-  var t=new Date();S.year=t.getFullYear();S.month=t.getMonth();
-  S.selDay=t.getDate();S.screen="detail";render();
-}
+function goToToday(){var t=new Date();S.year=t.getFullYear();S.month=t.getMonth();S.selDay=t.getDate();S.screen="detail";render();}
 
-// === NOTIFICATIONS ===
+// NOTIFICATIONS
 function checkReminders(){
   if(!("Notification" in window))return;
   if(Notification.permission==="default")Notification.requestPermission();
   if(Notification.permission!=="granted")return;
   var now=new Date();
   var hm=String(now.getHours()).padStart(2,"0")+":"+String(now.getMinutes()).padStart(2,"0");
-  var sch=buildSch(now.getFullYear(),now.getMonth(),S.satIndex);
+  var sch=buildSch(now.getFullYear(),now.getMonth());
   var type=sch[now.getDate()];var meta=META[type];
-  if(S.reminders.amOn&&hm===S.reminders.amTime){
-    new Notification("Morning Skincare",{body:meta.icon+" "+meta.label+" \u2014 time for your AM routine!",tag:"sk-am"});
-  }
-  if(S.reminders.pmOn&&hm===S.reminders.pmTime){
-    new Notification("Evening Skincare",{body:meta.icon+" "+meta.label+" \u2014 time for your PM routine!",tag:"sk-pm"});
-  }
+  if(S.reminders.amOn&&hm===S.reminders.amTime)
+    new Notification("Morning Skincare",{body:meta.icon+" "+meta.label,tag:"sk-am"});
+  if(S.reminders.pmOn&&hm===S.reminders.pmTime)
+    new Notification("Evening Skincare",{body:meta.icon+" "+meta.label,tag:"sk-pm"});
 }
 
-// === INIT ===
-initState();
-render();
+// INIT
+initState();render();
 setInterval(checkReminders,60000);
 
 })();
